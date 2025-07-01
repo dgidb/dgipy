@@ -42,9 +42,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        - cmd: "end-of-file-fixer"
-        - cmd: "trailing-whitespace"
-        - cmd: "mixed-line-ending"
+        cmd:
+          - "end-of-file-fixer"
+          - "trailing-whitespace"
+          - "mixed-line-ending"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.12
