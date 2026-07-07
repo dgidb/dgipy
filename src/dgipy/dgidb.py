@@ -173,10 +173,10 @@ def get_interactions(
     client = _get_client(api_url)
 
     if search == "genes":
-        raw_results = client.execute(queries.get_interactions_by_gene.query, params)
+        raw_results = client.execute(queries.get_interactions_by_gene.query, variable_values=params)
         results = raw_results["genes"]["nodes"]
     elif search == "drugs":
-        raw_results = client.execute(queries.get_interactions_by_drug.query, params)
+        raw_results = client.execute(queries.get_interactions_by_drug.query, variable_values=params)
         results = raw_results["drugs"]["nodes"]
     else:
         msg = "Search type must be specified using: search='drugs' or search='genes'"
