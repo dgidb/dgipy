@@ -10,7 +10,6 @@ from .dgidb import (
     get_interactions,
     get_sources,
 )
-from .graph_app import generate_app
 
 __all__ = [
     "SourceType",
