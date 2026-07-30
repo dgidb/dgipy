@@ -25,7 +25,6 @@ dependencies = [
     "requests",
     "gql[requests]",
     "pandas~=2.0",
-    "plotly",
     "networkx[default]",
 ]
 dynamic = ["version"]
