@@ -25,11 +25,7 @@ dependencies = [
     "requests",
     "gql[requests]",
     "pandas~=2.0",
-    "dash",
-    "dash-bootstrap-components",
-    "plotly",
     "networkx[default]",
-    "dash_cytoscape"
 ]
 dynamic = ["version"]
 
