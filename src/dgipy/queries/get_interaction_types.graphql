@@ -1,7 +1,4 @@
-query getInteractionTypes(
-  $first: Int = 1000
-  $after: String
-) {
+query getInteractionTypes($first: Int = 1000, $after: String) {
   interactionClaimTypes(first: $first, after: $after) {
     nodes {
       type

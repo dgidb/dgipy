@@ -1,8 +1,4 @@
-query getGeneCategories(
-  $first: Int = 1000
-  $names: [String!]
-  $after: String
-) {
+query getGeneCategories($first: Int = 1000, $names: [String!], $after: String) {
   genes(first: $first, names: $names, after: $after) {
     nodes {
       name
