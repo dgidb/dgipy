@@ -1,4 +1,8 @@
-"""Provides methods for performing different searches in DGIdb"""
+"""Provide high-level query functions for DGIdb.
+
+Examples show representative output. Records from the live database may change over
+time.
+"""
 
 import logging
 import os
@@ -54,13 +58,29 @@ def get_drugs(
     antineoplastic: bool | None = None,
     api_url: str | None = None,
 ) -> dict:
-    """Perform a record look up in DGIdb for a drug of interest
+    """Look up one or more drug records in DGIdb.
 
-    :param terms: drugs for record lookup
-    :param immunotherapy: filter option for results that are only immunotherapy
-    :param antineoplastic: filter option for results that see antineoplastic use
-    :param api_url: API endpoint for GraphQL request
-    :return: drug data
+    Results are column-oriented, so values at the same list index belong to the
+    same drug. For example, the approval flag at index zero describes the drug
+    name at index zero.
+
+    **Example:**
+
+    .. code-block:: pycon
+
+        >>> from dgipy import get_drugs
+        >>> drugs = get_drugs(["imatinib"])
+        >>> drugs["drug_name"]
+        ['IMATINIB']
+        >>> drugs["drug_is_approved"]
+        [True]
+
+    :param terms: drug names or aliases to look up
+    :param immunotherapy: optionally filter by immunotherapy status
+    :param antineoplastic: optionally filter by antineoplastic status
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: drug names, concept identifiers, aliases, attributes, treatment flags,
+        approval data, and FDA application identifiers in column-oriented lists
     """
     params: dict[str, bool | list] = {"names": terms}
     if immunotherapy is not None:
@@ -105,11 +125,23 @@ def get_drugs(
 
 
 def get_genes(terms: list, api_url: str | None = None) -> dict:
-    """Perform a record look up in DGIdb for genes of interest
+    """Look up one or more gene records in DGIdb.
 
-    :param terms: genes for record lookup
-    :param api_url: API endpoint for GraphQL request
-    :return: gene data
+    **Example:**
+
+    .. code-block:: pycon
+
+        >>> from dgipy import get_genes
+        >>> genes = get_genes(["EREG"])
+        >>> genes["gene_name"], genes["gene_concept_id"]
+        (['EREG'], ['hgnc:3443'])
+        >>> genes["gene_aliases"][0][:2]
+        ['EPIREGULIN', 'ER']
+
+    :param terms: gene names or aliases to look up
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: gene names, concept identifiers, aliases, and attributes in
+        column-oriented lists
     """
     api_url = api_url if api_url else API_ENDPOINT_URL
     client = _get_client(api_url)
@@ -141,19 +173,36 @@ def get_interactions(
     approved: str | None = None,
     api_url: str | None = None,
 ) -> dict:
-    """Perform an interaction look up for drugs or genes of interest
+    """Look up drug-gene interactions by gene or drug name.
 
-    :param terms: drugs or genes for interaction look up
-    :param search: interaction search type. valid types are "drugs" or "genes"
-    :param immunotherapy: filter option for results that are used in immunotherapy
-    :param antineoplastic: filter option for results that are part of antineoplastic regimens
-    :param source: filter option for specific database of interest
-    :param pmid: filter option for specific PMID
-    :param interaction_type: filter option for specific interaction types
-    :param approved: filter option for approved interactions
-    :param api_url: API endpoint for GraphQL request
-    :return: interaction results for terms
-    :raise ValueError: if invalid `search` arg used
+    Each output index describes one interaction. Use ``search="genes"`` (the
+    default) when ``terms`` contains genes and ``search="drugs"`` when it
+    contains drugs.
+
+    **Example:**
+
+    .. code-block:: pycon
+
+        >>> from dgipy import get_interactions
+        >>> by_gene = get_interactions(["EREG"])
+        >>> list(zip(by_gene["gene_name"], by_gene["drug_name"]))[:1]
+        [('EREG', 'CETUXIMAB')]
+        >>> by_drug = get_interactions(["sunitinib"], search="drugs")
+        >>> list(zip(by_drug["drug_name"], by_drug["gene_name"]))[:1]
+        [('SUNITINIB', 'FLT1')]
+
+    :param terms: gene or drug names for the interaction lookup
+    :param search: entity type in ``terms``; either ``"genes"`` or ``"drugs"``
+    :param immunotherapy: optionally filter by immunotherapy status
+    :param antineoplastic: optionally filter by antineoplastic status
+    :param source: optionally filter by source database name
+    :param pmid: optionally filter by PubMed identifier
+    :param interaction_type: optionally filter by interaction type
+    :param approved: optionally filter by approval status
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: gene and drug identifiers, interaction scores and attributes, source
+        names, and PubMed identifiers in column-oriented lists
+    :raise ValueError: if ``search`` is not ``"genes"`` or ``"drugs"``
     """
     params: dict[str, str | int | bool | list[str]] = {"names": terms}
     if immunotherapy is not None:
@@ -221,11 +270,25 @@ def get_interactions(
 
 
 def get_categories(terms: list, api_url: str | None = None) -> dict:
-    """Perform a category annotation lookup for genes of interest
+    """Look up category annotations for one or more genes.
 
-    :param terms: Genes of interest for annotations
-    :param api_url: API endpoint for GraphQL request
-    :return: category annotation results for genes
+    Genes with multiple categories produce multiple output rows.
+
+    **Example:**
+
+    .. code-block:: pycon
+
+        >>> from dgipy import get_categories
+        >>> categories = get_categories(["BRAF"])
+        >>> categories["gene_name"][:3]
+        ['BRAF', 'BRAF', 'BRAF']
+        >>> categories["gene_category"][:3]
+        ['CLINICALLY ACTIONABLE', 'DRUG RESISTANCE', 'DRUGGABLE GENOME']
+
+    :param terms: gene names or aliases to annotate
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: gene names, concept identifiers, full names, categories, and category
+        source names in column-oriented lists
     """
     api_url = api_url if api_url else API_ENDPOINT_URL
     client = _get_client(api_url)
@@ -253,7 +316,7 @@ def get_categories(terms: list, api_url: str | None = None) -> dict:
 
 
 class SourceType(str, Enum):
-    """Constrain source types for :py:method:`dgipy.dgidb.get_source` method."""
+    """Constrain source types for :func:`dgipy.dgidb.get_sources`."""
 
     DRUG = "drug"
     GENE = "gene"
@@ -264,15 +327,21 @@ class SourceType(str, Enum):
 def get_sources(
     source_type: SourceType | None = None, api_url: str | None = None
 ) -> dict:
-    """Perform a source lookup for relevant aggregate sources
+    """List metadata for DGIdb's aggregate sources.
 
-    >>> from dgipy import get_source, SourceType
-    >>> sources = get_source(SourceType.POTENTIALLY_DRUGGABLE)
+    **Example:**
 
-    :param source_type: type of source to look up. Fetches all sources otherwise.
-    :param api_url: API endpoint for GraphQL request
-    :return: all sources of relevant type in a json object
-    :raise TypeError: if invalid kind of data given as ``source_type`` param.
+    .. code-block:: pycon
+
+        >>> from dgipy import SourceType, get_sources
+        >>> sources = get_sources(SourceType.GENE)
+        >>> sources["source_name"]
+        ['NCBI Gene', 'HUGO Gene Nomenclature Committee', 'Ensembl']
+
+    :param source_type: optional source category; return all sources when omitted
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: source names, versions, claim counts, and license information in
+        column-oriented lists
     """
     source_param = source_type.value.upper() if source_type is not None else None
     api_url = api_url if api_url else API_ENDPOINT_URL
@@ -302,10 +371,10 @@ def get_sources(
 
 
 def get_all_genes(api_url: str | None = None) -> dict:
-    """Get all gene names present in DGIdb
+    """Get all gene names and concept identifiers present in DGIdb.
 
-    :param api_url: API endpoint for GraphQL request
-    :return: list of genes in DGIdb
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: ``gene_name`` and ``gene_concept_id`` column-oriented lists
     """
     api_url = api_url if api_url else API_ENDPOINT_URL
     client = _get_client(api_url)
@@ -318,10 +387,10 @@ def get_all_genes(api_url: str | None = None) -> dict:
 
 
 def get_all_drugs(api_url: str | None = None) -> dict:
-    """Get all drug names present in DGIdb
+    """Get all drug names and concept identifiers present in DGIdb.
 
-    :param api_url: API endpoint for GraphQL request
-    :return: a full list of drugs present in dgidb
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: ``drug_name`` and ``drug_concept_id`` column-oriented lists
     """
     api_url = api_url if api_url else API_ENDPOINT_URL
     client = _get_client(api_url)
@@ -334,11 +403,16 @@ def get_all_drugs(api_url: str | None = None) -> dict:
 
 
 def get_drug_applications(terms: list, api_url: str | None = None) -> dict:
-    """Perform a look up for ANDA/NDA applications for drug or drugs of interest
+    """Look up Drugs@FDA product data for one or more DGIdb drugs.
 
-    :param terms: drugs of interest
-    :param api_url: API endpoint for GraphQL request
-    :return: all ANDA/NDA applications for drugs of interest
+    DGIdb supplies the application identifiers, which are then used to retrieve
+    product details from Drugs@FDA. Drugs without a usable application response
+    are omitted.
+
+    :param terms: drug names or aliases to look up
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: drug identifiers, ANDA/NDA application numbers, brand names,
+        marketing statuses, dosage forms, and strengths in column-oriented lists
     """
     api_url = api_url if api_url else API_ENDPOINT_URL
     client = _get_client(api_url)
