@@ -35,6 +35,7 @@ get_drug_applications = _LazyQueryLoader("get_drug_applications")
 get_drugs = _LazyQueryLoader("get_drugs")
 get_gene_categories = _LazyQueryLoader("get_gene_categories")
 get_genes = _LazyQueryLoader("get_genes")
+get_interaction_types = _LazyQueryLoader("get_interaction_types")
 get_interactions_by_drug = _LazyQueryLoader("get_interactions_by_drug")
 get_interactions_by_gene = _LazyQueryLoader("get_interactions_by_gene")
 get_sources = _LazyQueryLoader("get_sources")
@@ -47,6 +48,7 @@ __all__ = [
     "get_drugs",
     "get_gene_categories",
     "get_genes",
+    "get_interaction_types",
     "get_interactions_by_drug",
     "get_interactions_by_gene",
     "get_sources",
