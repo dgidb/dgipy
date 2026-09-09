@@ -5,11 +5,8 @@
 [![image](https://img.shields.io/pypi/pyversions/dgipy.svg)](https://pypi.python.org/pypi/dgipy)
 [![Actions status](https://github.com/genomicmedlab/dgipy/actions/workflows/checks.yaml/badge.svg)](https://github.com/genomicmedlab/dgipy/actions)
 
-<!-- description -->
-Python wrapper for querying a DGIdb v5 GraphQL API. DGIpy provides drug and gene
-records, drug-gene interactions, gene categories, source metadata, and FDA drug
-application information.
-<!-- /description -->
+Python wrapper for querying a [Drug-Gene Interaction Database (DGIdb)](https://dgidb.org/) GraphQL API. DGIpy provides drug and gene records, drug-gene interactions, gene categories, source metadata, and FDA drug application information.
+
 
 ## Installation
 
