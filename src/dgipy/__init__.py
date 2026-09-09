@@ -13,7 +13,6 @@ from .dgidb import (
 
 __all__ = [
     "SourceType",
-    "generate_app",
     "get_all_genes",
     "get_categories",
     "get_drug_applications",
