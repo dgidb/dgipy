@@ -1,14 +1,18 @@
 query getInteractionsByGene(
+  $first: Int = 1000
   $names: [String!]
   $sourceDbName: String
   $pmid: Int
   $interactionType: String
+  $after: String
 ) {
   genes(
+    first: $first
     names: $names
     sourceDbName: $sourceDbName
     pmid: $pmid
     interactionType: $interactionType
+    after: $after
   ) {
     nodes {
       interactions {
@@ -40,6 +44,10 @@ query getInteractionsByGene(
           }
         }
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

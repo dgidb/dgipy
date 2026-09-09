@@ -1,8 +1,12 @@
-{
-  drugs {
+query getAllDrugs($first: Int = 1000, $after: String) {
+  drugs(first: $first, after: $after) {
     nodes {
       name
       conceptId
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

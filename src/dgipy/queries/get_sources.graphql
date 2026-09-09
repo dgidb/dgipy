@@ -1,5 +1,9 @@
-query getSources($sourceType: SourceTypeFilter) {
-  sources(sourceType: $sourceType) {
+query getSources(
+  $first: Int = 1000
+  $sourceType: SourceTypeFilter
+  $after: String
+) {
+  sources(first: $first, sourceType: $sourceType, after: $after) {
     nodes {
       fullName
       sourceDbName
@@ -9,6 +13,10 @@ query getSources($sourceType: SourceTypeFilter) {
       interactionClaimsCount
       license
       licenseLink
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

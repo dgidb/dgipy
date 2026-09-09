@@ -1,12 +1,16 @@
 query getDrugs(
+  $first: Int = 1000
   $names: [String!]
   $immunotherapy: Boolean
   $antiNeoplastic: Boolean
+  $after: String
 ) {
   drugs(
+    first: $first
     names: $names
     immunotherapy: $immunotherapy
     antiNeoplastic: $antiNeoplastic
+    after: $after
   ) {
     nodes {
       name
@@ -30,6 +34,10 @@ query getDrugs(
       drugApplications {
         appNo
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
