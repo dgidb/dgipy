@@ -1,5 +1,5 @@
-query getGeneCategories($names: [String!]) {
-  genes(names: $names) {
+query getGeneCategories($first: Int = 1000, $names: [String!], $after: String) {
+  genes(first: $first, names: $names, after: $after) {
     nodes {
       name
       conceptId
@@ -8,6 +8,10 @@ query getGeneCategories($names: [String!]) {
         name
         sourceNames
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

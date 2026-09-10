@@ -5,34 +5,15 @@ time.
 """
 
 import logging
-import os
 from enum import Enum
 
 import requests
-from gql import Client
-from gql.transport.requests import RequestsHTTPTransport
 from regbot.fetch.drugsfda import get_anda_results, get_nda_results
 
 import dgipy.queries as queries
+from dgipy.graphql import execute_paginated_query
 
 _logger = logging.getLogger(__name__)
-
-API_ENDPOINT_URL = os.environ.get("DGIDB_API_URL", "https://dgidb.org/api/graphql")
-
-
-_logger = logging.getLogger(__name__)
-
-
-def _get_client(api_url: str) -> Client:
-    """Acquire GraphQL client.
-
-    :param api_url: endpoint to request data at
-    :return: GraphQL client
-    """
-    transport = RequestsHTTPTransport(
-        url=api_url, headers={"dgidb-client-name": "dgipy"}
-    )
-    return Client(transport=transport, fetch_schema_from_transport=True)
 
 
 def _group_attributes(row: list[dict]) -> dict:
@@ -86,11 +67,9 @@ def get_drugs(
     if immunotherapy is not None:
         params["immunotherapy"] = immunotherapy
     if antineoplastic is not None:
-        params["antineoplastic"] = antineoplastic
+        params["antiNeoplastic"] = antineoplastic
 
-    api_url = api_url if api_url else API_ENDPOINT_URL
-    client = _get_client(api_url)
-    result = client.execute(queries.get_drugs.query, variable_values=params)
+    results = execute_paginated_query(queries.get_drugs.query, "drugs", params, api_url)
 
     output = {
         "drug_name": [],
@@ -103,7 +82,7 @@ def get_drugs(
         "drug_approval_ratings": [],
         "drug_fda_applications": [],
     }
-    for match in result["drugs"]["nodes"]:
+    for match in results:
         output["drug_name"].append(match["name"])
         output["drug_concept_id"].append(match["conceptId"])
         output["drug_aliases"].append([a["alias"] for a in match["drugAliases"]])
@@ -143,9 +122,9 @@ def get_genes(terms: list, api_url: str | None = None) -> dict:
     :return: gene names, concept identifiers, aliases, and attributes in
         column-oriented lists
     """
-    api_url = api_url if api_url else API_ENDPOINT_URL
-    client = _get_client(api_url)
-    result = client.execute(queries.get_genes.query, variable_values={"names": terms})
+    results = execute_paginated_query(
+        queries.get_genes.query, "genes", {"names": terms}, api_url
+    )
 
     output = {
         "gene_name": [],
@@ -153,7 +132,7 @@ def get_genes(terms: list, api_url: str | None = None) -> dict:
         "gene_aliases": [],
         "gene_attributes": [],
     }
-    for match in result["genes"]["nodes"]:
+    for match in results:
         output["gene_name"].append(match["name"])
         output["gene_concept_id"].append(match["conceptId"])
         output["gene_aliases"].append([a["alias"] for a in match["geneAliases"]])
@@ -170,7 +149,7 @@ def get_interactions(
     source: str | None = None,
     pmid: int | None = None,
     interaction_type: str | None = None,
-    approved: str | None = None,
+    approved: bool | None = None,
     api_url: str | None = None,
 ) -> dict:
     """Look up drug-gene interactions by gene or drug name.
@@ -208,7 +187,7 @@ def get_interactions(
     if immunotherapy is not None:
         params["immunotherapy"] = immunotherapy
     if antineoplastic is not None:
-        params["antiNeoplastic"] = antineoplastic
+        params["antineoplastic"] = antineoplastic
     if source is not None:
         params["sourceDbName"] = source
     if pmid is not None:
@@ -218,19 +197,14 @@ def get_interactions(
     if approved is not None:
         params["approved"] = approved
 
-    api_url = api_url if api_url else API_ENDPOINT_URL
-    client = _get_client(api_url)
-
     if search == "genes":
-        raw_results = client.execute(
-            queries.get_interactions_by_gene.query, variable_values=params
+        results = execute_paginated_query(
+            queries.get_interactions_by_gene.query, "genes", params, api_url
         )
-        results = raw_results["genes"]["nodes"]
     elif search == "drugs":
-        raw_results = client.execute(
-            queries.get_interactions_by_drug.query, variable_values=params
+        results = execute_paginated_query(
+            queries.get_interactions_by_drug.query, "drugs", params, api_url
         )
-        results = raw_results["drugs"]["nodes"]
     else:
         msg = "Search type must be specified using: search='drugs' or search='genes'"
         raise ValueError(msg)
@@ -290,10 +264,8 @@ def get_categories(terms: list, api_url: str | None = None) -> dict:
     :return: gene names, concept identifiers, full names, categories, and category
         source names in column-oriented lists
     """
-    api_url = api_url if api_url else API_ENDPOINT_URL
-    client = _get_client(api_url)
-    results = client.execute(
-        queries.get_gene_categories.query, variable_values={"names": terms}
+    results = execute_paginated_query(
+        queries.get_gene_categories.query, "genes", {"names": terms}, api_url
     )
     output = {
         "gene_name": [],
@@ -302,7 +274,7 @@ def get_categories(terms: list, api_url: str | None = None) -> dict:
         "gene_category": [],
         "gene_category_sources": [],
     }
-    for result in results["genes"]["nodes"]:
+    for result in results:
         name = result["name"]
         long_name = result["longName"]
         concept_id = result["conceptId"]
@@ -344,10 +316,10 @@ def get_sources(
         column-oriented lists
     """
     source_param = source_type.value.upper() if source_type is not None else None
-    api_url = api_url if api_url else API_ENDPOINT_URL
-    client = _get_client(api_url)
     params = {} if source_type is None else {"sourceType": source_param}
-    results = client.execute(queries.get_sources.query, variable_values=params)
+    results = execute_paginated_query(
+        queries.get_sources.query, "sources", params, api_url
+    )
     output = {
         "source_name": [],
         "source_short_name": [],
@@ -358,7 +330,7 @@ def get_sources(
         "source_license": [],
         "source_license_url": [],
     }
-    for result in results["sources"]["nodes"]:
+    for result in results:
         output["source_name"].append(result["fullName"])
         output["source_short_name"].append(result["sourceDbName"])
         output["source_version"].append(result["sourceDbVersion"])
@@ -376,11 +348,11 @@ def get_all_genes(api_url: str | None = None) -> dict:
     :param api_url: optional DGIdb GraphQL endpoint override
     :return: ``gene_name`` and ``gene_concept_id`` column-oriented lists
     """
-    api_url = api_url if api_url else API_ENDPOINT_URL
-    client = _get_client(api_url)
-    results = client.execute(queries.get_all_genes.query)
+    results = execute_paginated_query(
+        queries.get_all_genes.query, "genes", api_url=api_url
+    )
     genes = {"gene_name": [], "gene_concept_id": []}
-    for result in results["genes"]["nodes"]:
+    for result in results:
         genes["gene_name"].append(result["name"])
         genes["gene_concept_id"].append(result["conceptId"])
     return genes
@@ -392,11 +364,11 @@ def get_all_drugs(api_url: str | None = None) -> dict:
     :param api_url: optional DGIdb GraphQL endpoint override
     :return: ``drug_name`` and ``drug_concept_id`` column-oriented lists
     """
-    api_url = api_url if api_url else API_ENDPOINT_URL
-    client = _get_client(api_url)
-    results = client.execute(queries.get_all_drugs.query)
+    results = execute_paginated_query(
+        queries.get_all_drugs.query, "drugs", api_url=api_url
+    )
     drugs = {"drug_name": [], "drug_concept_id": []}
-    for result in results["drugs"]["nodes"]:
+    for result in results:
         drugs["drug_name"].append(result["name"])
         drugs["drug_concept_id"].append(result["conceptId"])
     return drugs
@@ -414,10 +386,11 @@ def get_drug_applications(terms: list, api_url: str | None = None) -> dict:
     :return: drug identifiers, ANDA/NDA application numbers, brand names,
         marketing statuses, dosage forms, and strengths in column-oriented lists
     """
-    api_url = api_url if api_url else API_ENDPOINT_URL
-    client = _get_client(api_url)
-    results = client.execute(
-        queries.get_drug_applications.query, variable_values={"names": terms}
+    results = execute_paginated_query(
+        queries.get_drug_applications.query,
+        "drugs",
+        {"names": terms},
+        api_url,
     )
     output = {
         "drug_name": [],
@@ -429,7 +402,7 @@ def get_drug_applications(terms: list, api_url: str | None = None) -> dict:
         "drug_dosage_strength": [],
     }
 
-    for result in results["drugs"]["nodes"]:
+    for result in results:
         name = result["name"]
         concept_id = result["conceptId"]
         for app in result["drugApplications"]:

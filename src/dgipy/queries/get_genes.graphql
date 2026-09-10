@@ -1,5 +1,5 @@
-query getGenes($names: [String!]) {
-  genes(names: $names) {
+query getGenes($first: Int = 1000, $names: [String!], $after: String) {
+  genes(first: $first, names: $names, after: $after) {
     nodes {
       name
       longName
@@ -11,6 +11,10 @@ query getGenes($names: [String!]) {
         name
         value
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

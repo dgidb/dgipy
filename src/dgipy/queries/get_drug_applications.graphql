@@ -1,11 +1,19 @@
-query getDrugApplications($names: [String!]) {
-  drugs(names: $names) {
+query getDrugApplications(
+  $first: Int = 1000
+  $names: [String!]
+  $after: String
+) {
+  drugs(first: $first, names: $names, after: $after) {
     nodes {
       name
       conceptId
       drugApplications {
         appNo
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
