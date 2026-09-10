@@ -40,15 +40,6 @@ dev = [
     "pre-commit>=4.0.1",
     "ruff==0.8.6",
 ]
-docs = [
-    "sphinx==6.1.3",
-    "sphinx-autodoc-typehints==1.22.0",
-    "sphinx-autobuild==2021.3.14",
-    "sphinx-copybutton==0.5.2",
-    "sphinxext-opengraph==0.8.2",
-    "furo==2023.3.27",
-    "sphinx-github-changelog==1.2.1"
-]
 
 [project.urls]
 Homepage = "https://github.com/genomicmedlab/dgipy"
@@ -80,7 +71,6 @@ branch = true
 [tool.ruff]
 src = ["src"]
 exclude = [
-    "docs/source/conf.py",
     "tests/test_graph_app.py",
 ]
 lint.select = [
