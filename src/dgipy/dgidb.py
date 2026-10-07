@@ -172,12 +172,15 @@ def get_interactions(
 
     :param terms: gene or drug names for the interaction lookup
     :param search: entity type in ``terms``; either ``"genes"`` or ``"drugs"``
-    :param immunotherapy: optionally filter by immunotherapy status
-    :param antineoplastic: optionally filter by antineoplastic status
+    :param immunotherapy: optionally filter by immunotherapy status; applied
+        locally for gene searches because DGIdb does not support this gene filter
+    :param antineoplastic: optionally filter by antineoplastic status; applied
+        locally for gene searches because DGIdb does not support this gene filter
     :param source: optionally filter by source database name
     :param pmid: optionally filter by PubMed identifier
     :param interaction_type: optionally filter by interaction type
-    :param approved: optionally filter by approval status
+    :param approved: optionally filter by approval status; applied locally for
+        gene searches because DGIdb does not support this gene filter
     :param api_url: optional DGIdb GraphQL endpoint override
     :return: gene and drug identifiers, interaction scores and attributes, source
         names, and PubMed identifiers in column-oriented lists
@@ -222,6 +225,40 @@ def get_interactions(
     }
     for result in results:
         for interaction in result["interactions"]:
+            drug = interaction["drug"]
+            if approved is not None and drug.get("approved") != approved:
+                continue
+            if immunotherapy is not None and drug.get("immunotherapy") != immunotherapy:
+                continue
+            if (
+                antineoplastic is not None
+                and drug.get("antiNeoplastic") != antineoplastic
+            ):
+                continue
+            if interaction_type is not None and interaction_type not in {
+                claim_type["type"] for claim_type in interaction["interactionTypes"]
+            }:
+                continue
+
+            claims = interaction["interactionClaims"]
+            if source is not None:
+                claims = [
+                    claim
+                    for claim in claims
+                    if claim["source"]["sourceDbName"] == source
+                ]
+            if pmid is not None:
+                claims = [
+                    claim
+                    for claim in claims
+                    if any(
+                        publication["pmid"] == pmid
+                        for publication in claim["publications"]
+                    )
+                ]
+            if not claims:
+                continue
+
             output["gene_name"].append(interaction["gene"]["name"])
             output["gene_long_name"].append(interaction["gene"]["longName"])
             output["gene_concept_id"].append(interaction["gene"]["conceptId"])
@@ -234,7 +271,7 @@ def get_interactions(
             )
             pubs = []
             sources = []
-            for claim in interaction["interactionClaims"]:
+            for claim in claims:
                 sources.append(claim["source"]["sourceDbName"])
                 pubs += [p["pmid"] for p in claim["publications"]]
             output["interaction_pmids"].append(pubs)

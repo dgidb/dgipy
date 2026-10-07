@@ -1,0 +1,53 @@
+{
+  "data": {
+    "genes": {
+      "nodes": [
+        {
+          "interactions": [
+            {
+              "interactionAttributes": [],
+              "drug": {
+                "name": "APPROVED CHEMBL DRUG",
+                "conceptId": "chembl:approved",
+                "approved": true
+              },
+              "gene": {
+                "name": "KRAS",
+                "longName": "KRAS proto-oncogene, GTPase",
+                "conceptId": "hgnc:6407"
+              },
+              "interactionScore": 1.0,
+              "interactionClaims": [
+                {
+                  "publications": [],
+                  "source": {"sourceDbName": "ChEMBL"}
+                }
+              ]
+            },
+            {
+              "interactionAttributes": [],
+              "drug": {
+                "name": "UNAPPROVED OTHER-SOURCE DRUG",
+                "conceptId": "chembl:unapproved",
+                "approved": false
+              },
+              "gene": {
+                "name": "KRAS",
+                "longName": "KRAS proto-oncogene, GTPase",
+                "conceptId": "hgnc:6407"
+              },
+              "interactionScore": 1.0,
+              "interactionClaims": [
+                {
+                  "publications": [],
+                  "source": {"sourceDbName": "GuideToPharmacology"}
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "pageInfo": {"hasNextPage": false, "endCursor": null}
+    }
+  }
+}
