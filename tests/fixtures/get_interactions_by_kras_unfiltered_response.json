@@ -20,7 +20,7 @@
               "interactionClaims": [
                 {
                   "publications": [],
-                  "source": {"sourceDbName": "ChEMBL"}
+                  "source": { "sourceDbName": "ChEMBL" }
                 }
               ]
             },
@@ -40,14 +40,14 @@
               "interactionClaims": [
                 {
                   "publications": [],
-                  "source": {"sourceDbName": "GuideToPharmacology"}
+                  "source": { "sourceDbName": "GuideToPharmacology" }
                 }
               ]
             }
           ]
         }
       ],
-      "pageInfo": {"hasNextPage": false, "endCursor": null}
+      "pageInfo": { "hasNextPage": false, "endCursor": null }
     }
   }
 }
