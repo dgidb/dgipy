@@ -30,6 +30,8 @@ query getInteractionsByDrug(
           name
           conceptId
           approved
+          immunotherapy
+          antiNeoplastic
         }
         gene {
           name
@@ -41,6 +43,9 @@ query getInteractionsByDrug(
           }
         }
         interactionScore
+        interactionTypes {
+          type
+        }
         interactionClaims {
           publications {
             citation

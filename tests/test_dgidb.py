@@ -108,6 +108,37 @@ def test_get_interactions_by_genes(fixtures_dir: Path, set_up_graphql_mock: Call
         assert len(empty_results["gene_name"]) == 0, "Handles empty response"
 
 
+def test_get_interactions_by_gene_applies_drug_approval_and_source_filters(
+    fixtures_dir: Path, set_up_graphql_mock: Callable
+):
+    """Gene searches must not expose records excluded by interaction filters.
+
+    This response models the unfiltered KRAS results reported by the reviewer.
+    Applying filters in dgiPy is important even when the upstream gene query
+    does not apply them.
+    """
+    with (
+        requests_mock.Mocker() as m,
+        (
+            fixtures_dir / "get_interactions_by_kras_unfiltered_response.json"
+        ).open() as response,
+    ):
+        set_up_graphql_mock(m, response)
+        results = get_interactions(["KRAS"], approved=True, source="ChEMBL")
+
+    failures = []
+    if not all(results["drug_approved"]):
+        failures.append("unapproved drugs")
+    if not all(
+        source == "ChEMBL"
+        for sources in results["interaction_sources"]
+        for source in sources
+    ):
+        failures.append("interactions from other sources")
+
+    assert not failures, f"Gene search returned {', '.join(failures)}"
+
+
 def test_get_interactions_by_drugs(fixtures_dir: Path, set_up_graphql_mock: Callable):
     with (
         requests_mock.Mocker() as m,
