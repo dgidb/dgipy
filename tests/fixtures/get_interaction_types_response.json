@@ -1,0 +1,22 @@
+{
+  "data": {
+    "interactionClaimTypes": {
+      "nodes": [
+        {
+          "type": "inhibitor",
+          "id": "1",
+          "directionality": "DIRECTED",
+          "definition": "Reduces target activity.",
+          "reference": "https://example.org/reference"
+        },
+        {
+          "type": "inhibitor",
+          "id": "2",
+          "directionality": null,
+          "definition": null,
+          "reference": "PMID:1"
+        }
+      ]
+    }
+  }
+}

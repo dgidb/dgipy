@@ -324,6 +324,35 @@ def get_categories(terms: list, api_url: str | None = None) -> dict:
     return output
 
 
+def get_interaction_types(api_url: str | None = None) -> dict:
+    """List interaction claim-type records defined by DGIdb.
+
+    A type label can occur in more than one record when DGIdb assigns distinct
+    identifiers to those records. Missing metadata is represented by ``None``.
+
+    :param api_url: optional DGIdb GraphQL endpoint override
+    :return: interaction types, identifiers, directionalities, definitions, and
+        references in column-oriented lists
+    """
+    results = execute_paginated_query(
+        queries.get_interaction_types.query, "interactionClaimTypes", api_url=api_url
+    )
+    output = {
+        "interaction_type": [],
+        "interaction_type_id": [],
+        "interaction_type_directionality": [],
+        "interaction_type_definition": [],
+        "interaction_type_reference": [],
+    }
+    for result in results:
+        output["interaction_type"].append(result["type"])
+        output["interaction_type_id"].append(result["id"])
+        output["interaction_type_directionality"].append(result["directionality"])
+        output["interaction_type_definition"].append(result["definition"])
+        output["interaction_type_reference"].append(result["reference"])
+    return output
+
+
 class SourceType(str, Enum):
     """Constrain source types for :func:`dgipy.dgidb.get_sources`."""
 

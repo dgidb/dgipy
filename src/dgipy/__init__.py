@@ -7,6 +7,7 @@ from .dgidb import (
     get_drug_applications,
     get_drugs,
     get_genes,
+    get_interaction_types,
     get_interactions,
     get_sources,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "get_drug_applications",
     "get_drugs",
     "get_genes",
+    "get_interaction_types",
     "get_interactions",
     "get_sources",
 ]

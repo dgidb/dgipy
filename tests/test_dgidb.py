@@ -13,6 +13,7 @@ from dgipy.dgidb import (
     get_drug_applications,
     get_drugs,
     get_genes,
+    get_interaction_types,
     get_interactions,
     get_sources,
 )
@@ -182,6 +183,25 @@ def test_get_categories(fixtures_dir: Path, set_up_graphql_mock: Callable):
         assert "DRUG RESISTANCE" in results["gene_category"]
         assert "DRUGGABLE GENOME" in results["gene_category"]
         assert "CLINICALLY ACTIONABLE" in results["gene_category"]
+
+
+def test_get_interaction_types(fixtures_dir: Path, set_up_graphql_mock: Callable):
+    with (
+        requests_mock.Mocker() as m,
+        (
+            fixtures_dir / "get_interaction_types_response.json"
+        ).open() as interaction_types_response,
+    ):
+        set_up_graphql_mock(m, interaction_types_response)
+        results = get_interaction_types()
+
+    assert results == {
+        "interaction_type": ["inhibitor", "inhibitor"],
+        "interaction_type_id": ["1", "2"],
+        "interaction_type_directionality": ["DIRECTED", None],
+        "interaction_type_definition": ["Reduces target activity.", None],
+        "interaction_type_reference": ["https://example.org/reference", "PMID:1"],
+    }
 
 
 def test_get_sources(fixtures_dir: Path, set_up_graphql_mock: Callable):
