@@ -61,6 +61,7 @@ shape: (1, 2)
 | `get_sources(source_type=None, ...)` | List DGIdb source metadata, optionally filtered by `SourceType`. |
 | `get_all_genes(...)` | List all gene names and concept identifiers. |
 | `get_all_drugs(...)` | List all drug names and concept identifiers. Import this function from `dgipy.dgidb`. |
+| `get_interaction_types(...)` | List interaction claim-type metadata. |
 | `get_drug_applications(terms, ...)` | Combine DGIdb application identifiers with Drugs@FDA product data. |
 
 The query functions accept an optional `api_url` argument when querying a DGIdb v5
